@@ -111,6 +111,7 @@
     <ProjectReference Include="..\..\Sources\Extensions\ThreatsManager.MsTmt\ThreatsManager.MsTmt.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MicroSvcsLoader.cs" />
     <Compile Include="ModelLoader.cs" />
     <Compile Include="Program.cs" />
   </ItemGroup>
