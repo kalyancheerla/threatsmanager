@@ -26,12 +26,9 @@ namespace DigraphConverter
         {
             if (args.Length == 2 && File.Exists(args[0]))
             {
-                // Initialize the ThreatsManager engine.
+                // initialize the ThreatsManager engine
                 var loader = new ModelLoader();
                 var model = loader.LoadDefaultModel();
-
-                // add diagram
-                var diagram = model.AddDiagram("My Diagram");
 
                 // input file
                 string input_file = args[0];
@@ -39,53 +36,61 @@ namespace DigraphConverter
 
                 // deserialize JSON directly from a file
                 var microsvcs = new MicroSvcsLoader().LoadJSONFile(input_file);
-                //new MicroSvcsLoader().PrettyPrint(microsvcs);
 
+                // project index
+                int pj_idx = 0;
+                foreach (var msvcpj in microsvcs)
+                {
+                    // increment the idx
+                    pj_idx++;
 
-                // TEST
-                // Create groups
-                var group1 = model.AddGroup<ITrustBoundary>("TB 1");
-                diagram.AddGroupShape(group1.Id, new PointF(0,0), new SizeF(500, 500));
-                var group2 = model.AddGroup<ITrustBoundary>("TB 2");
-                diagram.AddGroupShape(group2.Id, new PointF(0, 0), new SizeF(500, 500));
+                    // add diagram
+                    var diagram = model.AddDiagram($"Diagram {pj_idx}");
 
-                // create entities
-                var process1 = model.AddEntity<IProcess>("Project");
-                diagram.AddShape(process1, new PointF(100, 200));
-                var process2 = model.AddEntity<IProcess>("Node");
-                diagram.AddShape(process2, new PointF(200, 100));
-                var process3 = model.AddEntity<IProcess>("Pod 1");
-                diagram.AddShape(process3, new PointF(300, 300));
-                var process4 = model.AddEntity<IProcess>("Pod 2");
-                diagram.AddShape(process4, new PointF(400, 300));
-                var process5 = model.AddEntity<IProcess>("Pod 3");
-                diagram.AddShape(process5, new PointF(500, 300));
+                    // add required trust boundaries
+                    var aws_trustboundary = model.AddGroup<ITrustBoundary>("AWS Ava Zone");
+                    diagram.AddGroupShape(aws_trustboundary.Id, new PointF(0,0), new SizeF(2000, 1000));
 
-                // set parents
-                group2.SetParent(group1);
-                process1.SetParent(group2);
-                process2.SetParent(group1);
-                process3.SetParent(group2);
-                process4.SetParent(group2);
-                process5.SetParent(group2);
+                    var openshift_trustboundary = model.AddGroup<ITrustBoundary>("OpenShift Trust Boundary");
+                    diagram.AddGroupShape(openshift_trustboundary.Id, new PointF(0, 200), new SizeF(2000, 800));
 
-                // create data flows
-                var dataflow1 = model.AddDataFlow("Flow", process2.Id, process1.Id);
-                diagram.AddLink(dataflow1);
-                var dataflow2 = model.AddDataFlow("Flow", process2.Id, process3.Id);
-                diagram.AddLink(dataflow2);
-                var dataflow3 = model.AddDataFlow("Flow", process2.Id, process4.Id);
-                diagram.AddLink(dataflow3);
-                var dataflow4 = model.AddDataFlow("Flow", process2.Id, process5.Id);
-                diagram.AddLink(dataflow4);
-                var dataflow5 = model.AddDataFlow("Flow", process1.Id, process3.Id);
-                diagram.AddLink(dataflow5);
-                var dataflow6 = model.AddDataFlow("Flow", process1.Id, process4.Id);
-                diagram.AddLink(dataflow6);
-                var dataflow7 = model.AddDataFlow("Flow", process1.Id, process5.Id);
-                diagram.AddLink(dataflow7);
+                    // set tb parent
+                    openshift_trustboundary.SetParent(aws_trustboundary);
 
-                //GetAll(diagram);
+                    var pjprocess = model.AddEntity<IProcess>(msvcpj.Name);
+                    diagram.AddShape(pjprocess, new PointF(-1500, -100));
+                    pjprocess.SetParent(openshift_trustboundary);
+
+                    // node index
+                    int node_idx = 0;
+                    foreach (var msvcnode in msvcpj.Nodes)
+                    {
+                        // increment the idx
+                        node_idx++;
+
+                        var nodeprocess = model.AddEntity<IProcess>(msvcnode.Name);
+                        diagram.AddShape(nodeprocess, new PointF(node_idx*500-1500, -300));
+                        nodeprocess.SetParent(aws_trustboundary);
+                        var nodepj_link = model.AddDataFlow("Flow", nodeprocess.Id, pjprocess.Id);
+                        diagram.AddLink(nodepj_link);
+
+                        // pod index
+                        int pod_idx = 0;
+                        foreach (var msvcpod in msvcnode.Pods)
+                        {
+                            // increment the idx
+                            pod_idx++;
+
+                            var podprocess = model.AddEntity<IProcess>(msvcpod);
+                            diagram.AddShape(podprocess, new PointF(pod_idx*500-1200, node_idx*200));
+                            podprocess.SetParent(openshift_trustboundary);
+                            var nodepod_link = model.AddDataFlow("Flow", nodeprocess.Id, podprocess.Id);
+                            diagram.AddLink(nodepod_link);
+                            var pjpod_link = model.AddDataFlow("Flow", pjprocess.Id, podprocess.Id);
+                            diagram.AddLink(pjpod_link);
+                        }
+                    }
+                }
 
                 // Save the model to a file in JSON format.
                 var fileName = output_file;
