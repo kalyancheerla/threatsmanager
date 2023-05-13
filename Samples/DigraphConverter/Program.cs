@@ -45,7 +45,7 @@ namespace DigraphConverter
                     pj_idx++;
 
                     // add diagram
-                    var diagram = model.AddDiagram($"Diagram {pj_idx}");
+                    var diagram = model.AddDiagram($"{pj_idx}. {msvcpj.Name}");
 
                     // add required trust boundaries
                     var aws_trustboundary = model.AddGroup<ITrustBoundary>("AWS Ava Zone");
