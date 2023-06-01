@@ -9,8 +9,7 @@ This is the library code for the extension MicroSvcsThreatsMapper.
 
 Below video contains the initial TMS setup, extension installation and it's usage with a sample micro services json dump.
 
-![Recording on how to use the extension](./Resources/HowToUse_Recording.mp4)
-
+https://github.com/kalyancheerla/threatsmanager/assets/32354220/3c7a52f0-bc10-448a-a2b8-40f10b9a0c25
 
 ### Some important steps from the recording,
 * Change the TMS execution mode to `Pioneer`.
